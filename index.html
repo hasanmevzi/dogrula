@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belge Doğrulama — Advanced Operation Security</title>
+<meta name="description" content="Advanced Operation Security eğitimi katılım belgelerinin doğrulama sayfası.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground:    #1B2027;
+    --ground-2:  #232A33;
+    --paper:     #F2F1ED;
+    --ink:       #14181E;
+    --rule:      #C9C6BE;
+    --muted:     #79838F;
+    --muted-lt:  #9AA3AD;
+    --verified:  #2F6F5E;
+    --alert:     #A63D40;
+    --focus:     #C4A24C;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--ground);
+    background-image:
+      radial-gradient(ellipse 90% 60% at 50% -10%, var(--ground-2) 0%, transparent 70%);
+    color: var(--muted-lt);
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+    padding: clamp(1.5rem, 5vw, 4rem) 1.25rem 4rem;
+  }
+
+  .shell { width: 100%; max-width: 44rem; }
+
+  /* ---------- header ---------- */
+
+  .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+  }
+
+  h1 {
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(1.9rem, 6vw, 2.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--paper);
+    margin: 0 0 0.6rem;
+  }
+
+  .lede {
+    margin: 0 0 2.5rem;
+    max-width: 34rem;
+    color: var(--muted-lt);
+    font-size: 0.92rem;
+  }
+
+  .lede strong { color: var(--paper); font-weight: 500; }
+
+  /* ---------- lookup ---------- */
+
+  .lookup { margin-bottom: 1.75rem; }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .field {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  input[type="text"] {
+    flex: 1 1 16rem;
+    min-width: 0;
+    background: var(--ground-2);
+    border: 1px solid #333C47;
+    border-radius: 2px;
+    color: var(--paper);
+    font: inherit;
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    padding: 0.85rem 1rem;
+    text-transform: uppercase;
+  }
+
+  input[type="text"]::placeholder {
+    color: #566270;
+    letter-spacing: 0.06em;
+    text-transform: none;
+  }
+
+  input[type="text"]:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  button {
+    flex: 0 0 auto;
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--paper);
+    border-radius: 2px;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.85rem 1.6rem;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  button:hover:not(:disabled) { background: transparent; color: var(--paper); }
+  button:disabled { opacity: 0.45; cursor: progress; }
+
+  .hint { font-size: 0.78rem; color: var(--muted); margin: 0.75rem 0 0; }
+
+  /* ---------- trace ---------- */
+
+  .trace {
+    list-style: none;
+    margin: 0 0 1.75rem;
+    padding: 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+    min-height: 0;
+  }
+
+  .trace:empty { margin: 0; }
+
+  .trace li {
+    display: flex;
+    gap: 0.7rem;
+    padding: 0.15rem 0;
+    opacity: 0;
+    animation: fade 0.25s ease forwards;
+  }
+
+  .trace li::before { content: "›"; color: #4C5763; }
+  .trace li.ok::before { content: "✓"; color: var(--verified); }
+  .trace li.no::before { content: "✕"; color: var(--alert); }
+
+  @keyframes fade { to { opacity: 1; } }
+
+  /* ---------- result ---------- */
+
+  .card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 3px;
+    padding: clamp(1.75rem, 5vw, 2.75rem);
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,0.55);
+    display: none;
+  }
+
+  .card.show { display: block; animation: rise 0.35s cubic-bezier(0.2,0.7,0.3,1) both; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .card .kicker {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin: 0 0 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .name-wrap { position: relative; display: inline-block; }
+
+  .name {
+    font-family: "Newsreader", Georgia, serif;
+    font-size: clamp(1.6rem, 5.5vw, 2.4rem);
+    font-weight: 500;
+    line-height: 1.2;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .name-wrap::after {
+    content: "";
+    position: absolute;
+    inset: -0.1em -0.35em;
+    background: var(--ink);
+    transform-origin: right center;
+    animation: unredact 0.55s 0.15s cubic-bezier(0.65,0,0.35,1) both;
+  }
+
+  @keyframes unredact {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+
+  .body-line { margin: 1rem 0 1.75rem; font-size: 0.9rem; color: #3C444E; max-width: 30rem; }
+  .body-line em { font-style: normal; font-weight: 600; color: var(--ink); }
+
+  dl {
+    display: grid;
+    grid-template-columns: minmax(6.5rem, auto) 1fr;
+    gap: 0.55rem 1.5rem;
+    margin: 0 0 1.75rem;
+    font-size: 0.85rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  dt { color: #6B7280; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; padding-top: 0.15em; }
+  dd { margin: 0; color: var(--ink); }
+
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    border: 1.5px solid var(--verified);
+    color: var(--verified);
+    border-radius: 2px;
+    padding: 0.5rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .disclaimer {
+    margin: 1.75rem 0 0;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.72rem;
+    line-height: 1.65;
+    color: #6B7280;
+  }
+
+  /* ---------- failure ---------- */
+
+  .card.fail .kicker { color: var(--alert); border-bottom-color: rgba(166,61,64,0.35); }
+  .card.fail .name { font-size: clamp(1.25rem, 4.5vw, 1.6rem); }
+  .card.fail .name-wrap::after { display: none; }
+
+  .footer {
+    margin-top: 3rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .footer a { color: var(--muted-lt); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="shell">
+
+  <p class="eyebrow">Katılım Belgesi Doğrulama</p>
+  <h1>Advanced&nbsp;Operation Security</h1>
+  <p class="lede">
+    Belgenin üzerindeki numarayı girin. Kayıt bulunursa belgenin sahibi ve
+    eğitim bilgileri görüntülenir. Eğitmen: <strong>Hasan Mevzi</strong>.
+  </p>
+
+  <section class="lookup">
+    <label for="no">Belge numarası</label>
+    <div class="field">
+      <input id="no" type="text" inputmode="text" autocomplete="off"
+             spellcheck="false" placeholder="AOS-2026-0001-K7M2X">
+      <button id="go" type="button">Doğrula</button>
+    </div>
+    <p class="hint">Numaranın tamamını, sondaki karakterler dâhil girin.</p>
+  </section>
+
+  <ul class="trace" id="trace" aria-live="polite"></ul>
+
+  <article class="card" id="card"></article>
+
+  <p class="footer">
+    Doğrulama tarayıcınızda yapılır; girdiğiniz numara hiçbir sunucuya gönderilmez.
+  </p>
+
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+
+  const el = {
+    input: document.getElementById("no"),
+    button: document.getElementById("go"),
+    trace: document.getElementById("trace"),
+    card: document.getElementById("card"),
+  };
+
+  let store = null;
+  let storeError = null;
+
+  const veriYukle = fetch("belgeler.json", { cache: "no-cache" })
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then((j) => { store = j; })
+    .catch((e) => { storeError = e; });
+
+  // ---- yardımcılar ----
+
+  const normalize = (s) => s.trim().toUpperCase().replace(/\s+/g, "");
+
+  const hexToBytes = (hex) => {
+    const out = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+    return out;
+  };
+
+  const b64ToBytes = (b64) =>
+    Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+  async function sha256Hex(str) {
+    const buf = await crypto.subtle.digest("SHA-256", enc.encode(str));
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  async function anahtarTuret(belgeNo, salt, iter) {
+    const base = await crypto.subtle.importKey(
+      "raw", enc.encode(belgeNo), "PBKDF2", false, ["deriveKey"]
+    );
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt, iterations: iter, hash: "SHA-256" },
+      base,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["decrypt"]
+    );
+  }
+
+  async function coz(b64, key) {
+    const raw = b64ToBytes(b64);
+    const plain = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: raw.slice(0, 12) }, key, raw.slice(12)
+    );
+    return JSON.parse(dec.decode(plain));
+  }
+
+  const escape = (s) => String(s).replace(/[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // ---- arayüz ----
+
+  function traceReset() { el.trace.innerHTML = ""; }
+
+  function traceAdd(text, state) {
+    const li = document.createElement("li");
+    if (state) li.className = state;
+    li.textContent = text;
+    li.style.animationDelay = `${el.trace.children.length * 90}ms`;
+    el.trace.appendChild(li);
+  }
+
+  function hata(baslik, aciklama) {
+    el.card.className = "card show fail";
+    el.card.innerHTML = `
+      <p class="kicker">Doğrulanamadı</p>
+      <span class="name-wrap"><h2 class="name">${escape(baslik)}</h2></span>
+      <p class="body-line">${escape(aciklama)}</p>`;
+  }
+
+  function basari(kayit, belgeNo) {
+    el.card.className = "card show";
+    el.card.innerHTML = `
+      <p class="kicker">Kayıt bulundu</p>
+      <span class="name-wrap"><h2 class="name">${escape(kayit.ad)}</h2></span>
+      <p class="body-line">
+        ${escape(kayit.tarih)} tarihinde düzenlenen
+        <em>${escape(kayit.egitim)}</em> başlıklı eğitime katılmıştır.
+      </p>
+      <dl>
+        <dt>Belge no</dt><dd>${escape(belgeNo)}</dd>
+        <dt>Süre</dt><dd>${escape(kayit.sure)}</dd>
+        <dt>Eğitmen</dt><dd>${escape(kayit.egitmen)}</dd>
+      </dl>
+      <span class="stamp">Doğrulandı</span>
+      <p class="disclaimer">
+        Bu belge yalnızca eğitime katılımı gösterir. Herhangi bir resmî denkliği,
+        akreditasyonu veya mesleki yeterlilik niteliği bulunmamaktadır.
+      </p>`;
+  }
+
+  // ---- akış ----
+
+  async function dogrula() {
+    const belgeNo = normalize(el.input.value);
+
+    traceReset();
+    el.card.className = "card";
+
+    if (!belgeNo) {
+      el.input.focus();
+      hata("Numara girilmedi", "Belgenizin alt kısmındaki numarayı girip tekrar deneyin.");
+      return;
+    }
+
+    el.button.disabled = true;
+    try {
+      await veriYukle;
+
+      if (storeError || !store) {
+        hata("Kayıtlara ulaşılamadı",
+             "Doğrulama kayıtları yüklenemedi. Sayfayı yenileyin; sorun sürerse hasan9165@gmail.com adresine yazın.");
+        return;
+      }
+
+      traceAdd(`numara: ${belgeNo}`);
+
+      const anahtar = (await sha256Hex(`${belgeNo}:${store.salt}`)).slice(0, 32);
+      traceAdd("SHA-256 özeti hesaplandı");
+
+      const kayit = store.kayitlar[anahtar];
+      if (!kayit) {
+        traceAdd("kayıt bulunamadı", "no");
+        hata("Bu numaraya ait kayıt yok",
+             "Numarayı harf harf kontrol edin. Doğru girdiğinizden eminseniz hasan9165@gmail.com adresine yazın.");
+        return;
+      }
+
+      traceAdd("kayıt bulundu", "ok");
+      traceAdd("PBKDF2 ile anahtar türetiliyor…");
+
+      const key = await anahtarTuret(belgeNo, hexToBytes(store.salt), store.iter);
+      const veri = await coz(kayit, key);
+
+      traceAdd("AES-256-GCM çözümü doğrulandı", "ok");
+      basari(veri, belgeNo);
+
+    } catch (e) {
+      traceAdd("çözüm başarısız", "no");
+      hata("Kayıt okunamadı",
+           "Numara bir kayda karşılık geliyor ancak içerik çözülemedi. Lütfen hasan9165@gmail.com adresine bildirin.");
+    } finally {
+      el.button.disabled = false;
+    }
+  }
+
+  el.button.addEventListener("click", dogrula);
+  el.input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); dogrula(); }
+  });
+
+  // Belge numarası bağlantıda geldiyse otomatik doğrula:  ...?no=AOS-2026-0001-K7M2X
+  const q = new URLSearchParams(location.search).get("no");
+  if (q) { el.input.value = q; dogrula(); }
+})();
+</script>
+</body>
+</html>
