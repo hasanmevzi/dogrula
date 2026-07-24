@@ -1,0 +1,15 @@
+# Katılımcı verisi ve açık belge numaraları ASLA yayımlanmaz.
+# (belgeler.json şifrelidir ve yayımlanır; .csv dosyaları yayımlanmaz.)
+katilimcilar.csv
+belgeler.csv
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
